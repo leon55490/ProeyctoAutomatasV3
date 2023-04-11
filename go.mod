@@ -3,6 +3,7 @@ module main
 go 1.20
 
 require (
+	fyne.io/fyne v1.4.3 // indirect
 	fyne.io/fyne/v2 v2.3.3 // indirect
 	fyne.io/systray v1.10.1-0.20230312215936-7f71b037e260 // indirect
 	github.com/benoitkugler/textlayout v0.3.0 // indirect
