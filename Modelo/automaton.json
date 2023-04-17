@@ -1,0 +1,26 @@
+{
+    "alphabet": ["a"],
+    "states": [
+        {
+            "name": "q0",
+            "coordinate": [100, 100],
+            "is_initial": true,
+            "is_final": false,
+            "transitions": [
+                {"to": "q1", "symbol": "a"}
+            ]
+        },
+        {
+            "name": "q1",
+            "coordinate": [300, 100],
+            "is_initial": false,
+            "is_final": true,
+            "transitions": [
+                {"from": "q1", "to": "q1", "symbol": "a"}
+            ]
+        }
+    ],
+    "transitions": [
+        {"from": "q0", "to": "q1", "symbol": "a"}
+    ]
+}

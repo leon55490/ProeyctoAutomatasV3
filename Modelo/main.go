@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+
 	// "fyne.io/fyne/v2/canvas"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
