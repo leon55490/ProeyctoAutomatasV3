@@ -12,42 +12,33 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 )
-
-type Transition struct {
-	Symbol string `json:"symbol"`
-	From   string `json:"from"`
-	To     string `json:"to"`
-}
-
-type State struct {
-    Name        string                      `json:"name"`
-    IsInitial   bool                        `json:"is_initial"`
-    IsFinal     bool                        `json:"is_final"`
-    Transitions map[string]*Transition      `json:"transitions"`
-}
+var automaton *Automaton // Define the loaded automaton pointer
 
 type Automaton struct {
-    States       []*State          `json:"states"`
-    Transitions  map[string]map[string]Transition `json:"transitions"`
-    InitialState string            `json:"initial_state"`
-    FinalStates  map[string]bool   `json:"final_states"`
+    States       []string          `json:"states"`
+    Alphabet     []string          `json:"alphabet"`
+    Transitions  map[string]map[string]string `json:"transitions"`
+    InitialState string            `json:"initialState"`
+    FinalStates  []string          `json:"finalStates"`
 }
 
 func (a *Automaton) Run(input string) string {
-	fmt.Println("Primera funcion")
+	fmt.Println("Ultima funcion")
     currentState := a.InitialState
     for _, c := range input {
         transition, ok := a.Transitions[currentState][string(c)]
         if !ok {
             return "Error: no transition exists for state " + currentState + " and input " + string(c)
         }
-        currentState = transition.To
+        currentState = transition
     }
-    if a.FinalStates[currentState] {
-        return "Accepted"
-    } else {
-        return "Rejected"
-    }
+	fmt.Println(string(input))
+    for _, finalState := range a.FinalStates {
+        if currentState == finalState {
+            return "ACEPTADO"
+        }
+    } 
+	return "Rechazado"
 }
 
 func main() {
@@ -66,14 +57,16 @@ func main() {
 	outputLabel := widget.NewLabel("Result:")
 	outputText := widget.NewLabel("")
 
-	var loadedAutomaton *Automaton // Define the loaded automaton pointer
+	
 
 	runButton := widget.NewButton("Run", func() {
 		// Run the loaded automaton with the current input
-		if loadedAutomaton == nil {
+		if automaton == nil {
 			return
 		}
-		output := loadedAutomaton.Run(inputEntry.Text)
+		fmt.Println("aqui esta el nuevo mensaje")
+		fmt.Println(string(inputEntry.Text))
+		output := automaton.Run(inputEntry.Text)
 		outputText.SetText(output)
 	})
 
@@ -88,12 +81,11 @@ func main() {
 					dialog.ShowError(err, myWindow)
 					return
 				}
-				automaton, err := loadAutomatonFromBytes(bytes)
+				err = loadAutomatonFromBytes(bytes)
 				if err != nil {
 					dialog.ShowError(err, myWindow)
 					return
 				}
-				loadedAutomaton = automaton // Save the loaded automaton
 				inputEntry.SetText("")
 				outputText.SetText("")
 				runButton.OnTapped() // Automatically run the loaded automaton
@@ -121,32 +113,11 @@ func main() {
 }
 
 
-func loadAutomatonFromBytes(data []byte) (*Automaton, error) {
+func loadAutomatonFromBytes(data []byte) (error) {
 	fmt.Println("Lee y carga archivos")
-    var automaton Automaton
     err := json.Unmarshal(data, &automaton)
     if err != nil {
-        return nil, fmt.Errorf("error unmarshalling JSON: %v", err)
+        return fmt.Errorf("error unmarshalling JSON: %v", err)
     }
-
-    // Convert the transitions map from map[string]Transition to map[string]*Transition
-    for _, state := range automaton.States {
-        for symbol, transition := range state.Transitions {
-            state.Transitions[symbol] = transition
-        }
-    }
-
-    // Find the initial state of the automaton
-    for i, state := range automaton.States {
-        if state.IsInitial {
-            automaton.InitialState = state.Name
-            // Move the initial state to the front of the slice for easier access
-            if i != 0 {
-                automaton.States[0], automaton.States[i] = automaton.States[i], automaton.States[0]
-            }
-            break
-        }
-    }
-
-    return &automaton, nil
+	return nil
 }
