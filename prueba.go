@@ -34,6 +34,7 @@ type Automaton struct {
 }
 
 func (a *Automaton) Run(input string) string {
+	fmt.Println("Primera funcion")
     currentState := a.InitialState
     for _, c := range input {
         transition, ok := a.Transitions[currentState][string(c)]
@@ -50,6 +51,7 @@ func (a *Automaton) Run(input string) string {
 }
 
 func main() {
+	fmt.Println("Corre el main")
 	// Create a new Fyne application
 	myApp := app.New()
 
@@ -77,6 +79,7 @@ func main() {
 
 	// Create button widgets
 	loadButton := widget.NewButton("Load Automaton", func() {
+		fmt.Println("Muestra la opcion de cargar archivos")
 		fileDialog := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err == nil && reader != nil {
 				defer reader.Close()
@@ -119,7 +122,7 @@ func main() {
 
 
 func loadAutomatonFromBytes(data []byte) (*Automaton, error) {
-	// fmt.Println(string(data))
+	fmt.Println("Lee y carga archivos")
     var automaton Automaton
     err := json.Unmarshal(data, &automaton)
     if err != nil {
@@ -146,19 +149,4 @@ func loadAutomatonFromBytes(data []byte) (*Automaton, error) {
     }
 
     return &automaton, nil
-}
-
-func loadAutomatonFromFile(filename string) (*Automaton, error) {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	automaton, err := loadAutomatonFromBytes(data)
-	if err != nil {
-		// Catch any errors thrown by loadAutomatonFromBytes and return a more descriptive error
-		return nil, fmt.Errorf("error loading automaton from file: %v", err)
-	}
-
-	return automaton, nil
 }
