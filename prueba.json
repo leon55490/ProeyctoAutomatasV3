@@ -13,7 +13,7 @@
 		{
 			"name": "q1",
 			"is_initial": false,
-			"is_final": false,
+			"is_final": true,
 			"transitions": {
 				"0": { "to": "q1" },
 				"1": { "to": "q0" }
@@ -21,6 +21,6 @@
 		}
 	],
 	"input_strings": {
-		"prueba": "01011"
+		"prueba": "101010"
 	}
 }
