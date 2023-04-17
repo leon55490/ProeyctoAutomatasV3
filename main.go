@@ -9,7 +9,16 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	// "fyne.io/fyne/v2/canvas"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 )
+
+type Point struct {
+    X float64 `json:"x"`
+    Y float64 `json:"y"`
+}
 
 type Transition struct {
 	Symbol string `json:"symbol"`
@@ -17,18 +26,79 @@ type Transition struct {
 	To     string `json:"to"`
 }
 
-type State struct {
-	Name       string        `json:"name"`
-	IsInitial  bool          `json:"is_initial"`
-	IsFinal    bool          `json:"is_final"`
-	Transitions []Transition `json:"transitions"`
-}
 
+type State struct {
+    Name        string        `json:"name"`
+    IsInitial   bool          `json:"is_initial"`
+    IsFinal     bool          `json:"is_final"`
+    Transitions []Transition  `json:"transitions"`
+    Coordinate  []float64     `json:"coordinate"`
+}
 type Automaton struct {
 	States        []State  `json:"states"`
 	Alphabet      []string `json:"alphabet"`
 	InitialState  string   `json:"initial_state"`
 }
+
+func getStatePoints(automaton Automaton) plotter.XYs {
+    points := make(plotter.XYs, 0)
+    for _, state := range automaton.States {
+        points = append(points, plotter.XY{state.Coordinate[0], state.Coordinate[1]})
+    }
+    return points
+}
+
+
+func plotAutomaton(automaton Automaton) {
+	// Create a new plot
+	p := plot.New()
+
+	// Create a new scatter plotter for the automaton states
+	s, err := plotter.NewScatter(getStatePoints(automaton))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Add the scatter plotter to the plot
+	p.Add(s)
+
+	// Save the plot to a file
+	err = p.Save(4*vg.Inch, 4*vg.Inch, "automaton.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+// func plotAutomaton(automaton Automaton) (*canvas.Image, error) {
+// 	// Create a new plot
+// 	p := plot.New()
+
+// 	// Create a new scatter plotter for the automaton states
+// 	s, err := plotter.NewScatter(getStatePoints(automaton))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Add the scatter plotter to the plot
+// 	p.Add(s)
+
+// 	// Draw the plot onto an image
+// 	img, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "png")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Create an image widget to display the image
+// 	outputImage := canvas.NewImageFromImage(img)
+// 	outputImage.SetMinSize(fyne.NewSize(400, 400))
+
+// 	// Return the image widget
+// 	return outputImage, nil
+// }
+
+
+
+
+
 
 func main() {
 	// Load the automaton from a file
@@ -58,6 +128,7 @@ func main() {
 		// Test whether the input string is accepted by the automaton
 		if automaton.Accepts(input) {
 			outputText.SetText("Accepted")
+			plotAutomaton(automaton) // Dibujar el automata si la cadena es aceptada
 		} else {
 			outputText.SetText("Rejected")
 		}
