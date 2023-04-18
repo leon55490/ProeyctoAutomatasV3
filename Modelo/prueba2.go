@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -15,7 +14,6 @@ import (
 )
 
 var automaton *Automaton // Define the loaded automaton pointer
-var loadedContent []byte
 
 type Automaton struct {
 	States       []string                     `json:"states"`
@@ -26,44 +24,50 @@ type Automaton struct {
 }
 
 func (a *Automaton) Run(input string) string {
-	if a == nil {
-		return "Error: no automaton loaded"
-	}
-
+	fmt.Println("Ultima funcion")
 	currentState := a.InitialState
-	accepted := false
 	for _, c := range input {
 		transition, ok := a.Transitions[currentState][string(c)]
 		if !ok {
-			return "Rechazado"
+			return "Error: no transition exists for state " + currentState + " and input " + string(c)
 		}
 		currentState = transition
 	}
-
+	fmt.Println(string(input))
 	for _, finalState := range a.FinalStates {
 		if currentState == finalState {
-			accepted = true
-			break
+			return "ACEPTADO"
 		}
 	}
-
-	if accepted {
-		return "ACEPTADO"
-	} else {
-		return "Rechazado"
-	}
+	return "Rechazado"
 }
 
 func main() {
+	fmt.Println("Corre el main")
 	// Create a new Fyne application
 	myApp := app.New()
 
 	// Create a new window
 	myWindow := myApp.NewWindow("Automaton")
 
+	// Create input widgets
+	inputLabel := widget.NewLabel("Input string:")
+	inputEntry := widget.NewEntry()
+
 	// Create output widgets
 	outputLabel := widget.NewLabel("Result:")
 	outputText := widget.NewLabel("")
+
+	runButton := widget.NewButton("Run", func() {
+		// Run the loaded automaton with the current input
+		if automaton == nil {
+			return
+		}
+		fmt.Println("aqui esta el nuevo mensaje")
+		fmt.Println(string(inputEntry.Text))
+		output := automaton.Run(inputEntry.Text)
+		outputText.SetText(output)
+	})
 
 	// Create button widgets
 	loadButton := widget.NewButton("Load Automaton", func() {
@@ -81,31 +85,24 @@ func main() {
 					dialog.ShowError(err, myWindow)
 					return
 				}
+				inputEntry.SetText("")
 				outputText.SetText("")
+				runButton.OnTapped() // Automatically run the loaded automaton
 			}
 		}, myWindow)
 		fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{".json"}))
 		fileDialog.Show()
 	})
 
-	runButton := widget.NewButton("Run Automaton", func() {
-		if automaton == nil {
-			dialog.ShowError(errors.New("no automaton loaded"), myWindow)
-			return
-		}
-
-		result := automaton.Run(string(loadedContent))
-		outputText.SetText(result)
-	})
+	// Create a container for input widgets
+	inputContainer := container.NewVBox(inputLabel, inputEntry)
 
 	// Create a container for output widgets
 	outputContainer := container.NewVBox(outputLabel, outputText)
 
-	// Create a container for the buttons
+	// Create a container for the input and output containers and the buttons
 	buttonContainer := container.NewHBox(loadButton, runButton)
-
-	// Create a container for the output container and the buttons
-	content := container.NewVBox(outputContainer, buttonContainer)
+	content := container.NewVBox(inputContainer, outputContainer, buttonContainer)
 
 	// Add the content container to the window
 	myWindow.SetContent(content)
@@ -116,11 +113,9 @@ func main() {
 
 func loadAutomatonFromBytes(data []byte) error {
 	fmt.Println("Lee y carga archivos")
-	automaton = &Automaton{}
-	err := json.Unmarshal(data, automaton)
+	err := json.Unmarshal(data, &automaton)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling JSON: %v", err)
 	}
-	loadedContent = data
 	return nil
 }
