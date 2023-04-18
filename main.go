@@ -16,6 +16,7 @@ import (
 
 var automaton *Automaton // Define the loaded automaton pointer
 var loadedContent []byte
+var prueba string
 
 type Automaton struct {
 	States       []string                     `json:"states"`
@@ -36,6 +37,7 @@ func (a *Automaton) Run(input string) string {
 		transition, ok := a.Transitions[currentState][string(c)]
 		if !ok {
 			return "Rechazado"
+
 		}
 		currentState = transition
 	}
@@ -48,7 +50,7 @@ func (a *Automaton) Run(input string) string {
 	}
 
 	if accepted {
-		return "ACEPTADO"
+		return "Aceptado"
 	} else {
 		return "Rechazado"
 	}
@@ -66,8 +68,7 @@ func main() {
 	outputText := widget.NewLabel("")
 
 	// Create button widgets
-	loadButton := widget.NewButton("Load Automaton", func() {
-		fmt.Println("Muestra la opcion de cargar archivos")
+	loadAutomatonButton := widget.NewButton("Cargar automata", func() {
 		fileDialog := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err == nil && reader != nil {
 				defer reader.Close()
@@ -82,27 +83,56 @@ func main() {
 					return
 				}
 				outputText.SetText("")
+				fmt.Println("Se cargo el automata")
 			}
 		}, myWindow)
 		fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{".json"}))
 		fileDialog.Show()
 	})
 
-	runButton := widget.NewButton("Run Automaton", func() {
+	loadPruebaButton := widget.NewButton("Cargar Cadena", func() {
+		fileDialog := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err == nil && reader != nil {
+				defer reader.Close()
+				bytes, err := ioutil.ReadAll(reader)
+				if err != nil {
+					dialog.ShowError(err, myWindow)
+					return
+				}
+				err = loadPruebaFromBytes(bytes)
+				if err != nil {
+					dialog.ShowError(err, myWindow)
+					return
+				}
+				outputText.SetText("")
+				fmt.Println("Se cargo la cadena")
+			}
+		}, myWindow)
+		fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{".json"}))
+		fileDialog.Show()
+	})
+
+	runButton := widget.NewButton("Correr automata", func() {
 		if automaton == nil {
-			dialog.ShowError(errors.New("no automaton loaded"), myWindow)
+			dialog.ShowError(errors.New("No se cargo el automata"), myWindow)
+			return
+		}
+		if prueba == "" {
+			dialog.ShowError(errors.New("No se cargo la prueba"), myWindow)
 			return
 		}
 
-		result := automaton.Run(string(loadedContent))
+		result := automaton.Run(prueba)
 		outputText.SetText(result)
+		fmt.Println("Comenzo el programa")
+
 	})
 
 	// Create a container for output widgets
 	outputContainer := container.NewVBox(outputLabel, outputText)
 
 	// Create a container for the buttons
-	buttonContainer := container.NewHBox(loadButton, runButton)
+	buttonContainer := container.NewHBox(loadAutomatonButton, loadPruebaButton, runButton)
 
 	// Create a container for the output container and the buttons
 	content := container.NewVBox(outputContainer, buttonContainer)
@@ -115,12 +145,20 @@ func main() {
 }
 
 func loadAutomatonFromBytes(data []byte) error {
-	fmt.Println("Lee y carga archivos")
 	automaton = &Automaton{}
 	err := json.Unmarshal(data, automaton)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling JSON: %v", err)
 	}
-	loadedContent = data
+	return nil
+}
+
+func loadPruebaFromBytes(data []byte) error {
+	var input map[string]string
+	err := json.Unmarshal(data, &input)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling JSON: %v", err)
+	}
+	prueba = input["input"]
 	return nil
 }
